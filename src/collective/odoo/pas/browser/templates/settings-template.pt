@@ -1,0 +1,59 @@
+<metal:page define-macro="admin"
+			i18n:domain="collective.Odoo">
+  <metal:block use-macro="here/prefs_main_template/macros/master">
+    <metal:block fill-slot="prefs_configlet_content">
+
+    <div id="edit-bar">
+    <ul class="contentViews" id="content-views"
+	    tal:define="selected python:request.get('ACTUAL_URL').split('/')[-1]">
+			
+	  <tal:loop tal:repeat="cview context/@@view_get_menu/odoo_admin">
+	    <li class="selected"
+		tal:condition="python:selected == cview['action']">
+              <a href=""
+		 tal:attributes="href cview/action"
+		 tal:content="cview/title" i18n:translate=""> label </a>						
+	    </li>
+	    <li tal:condition="python:selected != cview['action']">
+              <a href=""
+		 tal:attributes="href cview/action"
+		 tal:content="cview/title" i18n:translate=""> label </a>						
+	    </li>
+	  </tal:loop>
+
+	</ul>
+	
+	</div>
+	<metal:content define-macro="content">
+    <div id="content" class="documentEditable">
+	<div id="region-content" class="documentContent">
+	  <div metal:use-macro="here/global_statusmessage/macros/portal_message">
+	    Portal status message
+	  </div> 
+	  
+	  <div class="configlet">
+	    <h1 i18n:domain="collective.Odoo" i18n:translate="heading_odoo_setup">Odoo Setup</h1> 
+	    
+        <metal:block define-slot="up_to_parent">
+            <a i18n:domain="collective.Odoo"
+               href=""
+               class="link-parent"
+               tal:attributes="href string: $portal_url/@@manage-odoo-overview"
+               i18n:translate="label_up_to_odoo_setup">
+                  Up to Odoo Setup
+            </a>
+	    </metal:block>
+
+	  </div>
+	  
+	  <metal:block define-slot="admin_content" tal:content="nothing" i18n:translate="">
+	    Admin Template
+	  </metal:block>
+	</div>
+
+      </div>    
+    </metal:content>
+    </metal:block>
+  </metal:block>
+</metal:page>
+

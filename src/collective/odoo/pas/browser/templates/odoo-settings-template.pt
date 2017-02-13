@@ -1,0 +1,21 @@
+<metal:page use-macro="context/@@manage-odoo-settings-template/macros/admin"
+	    i18n:domain="collective.Odoo">
+  <metal:block fill-slot="up_to_parent"
+      tal:define="portal context/@@plone_portal_state/portal;
+                  portal_url portal/absolute_url;"> 	    
+	    <a href=""
+	       class="link-parent"
+	       tal:attributes="href string: $portal_url/@@manage-odoo-overview"
+	       i18n:translate="label_up_to_plone_setup"
+	       i18n:domain="plone">
+              Up to Site Setup
+	    </a>
+  </metal:block>
+  <metal:block fill-slot="admin_content">
+
+<p tal:replace="structure view/contents"/>
+<div style="clear:both;"></div>  		  
+
+  </metal:block>
+</metal:page>
+

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<object name="portal_controlpanel" meta_type="Plone Control Panel Tool"
+  xmlns:i18n="http://xml.zope.org/namespaces/i18n" i18n:domain="collective.Odoo">
+
+ <configlet title="Odoo" action_id="odoo" appId="collective.Odoo"
+    category="Products" condition_expr=""
+    icon_expr="string:${portal_url}/++resource++odoo.png"
+    url_expr="string:${portal_url}/@@manage-odoo-overview" visible="True">
+  <permission>Modify portal content</permission>
+ </configlet>
+ 
+</object>

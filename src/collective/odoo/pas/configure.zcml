@@ -1,0 +1,49 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:five="http://namespaces.zope.org/five"
+    i18n_domain="collective.odoo.pas">
+
+  <i18n:registerTranslations directory="locales" />
+  <five:registerPackage package="." initialize=".initialize" />
+  <includeDependencies package="." />
+
+  <include package=".browser" />
+
+
+  <genericsetup:registerProfile
+      name="default"
+      title="collective.odoo.pas"
+      directory="profiles/default"
+      description="Installs the collective.odoo.pas add-on."
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      post_handler=".setuphandlers.post_install"
+      />
+
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="collective.odoo.pas (uninstall)"
+      directory="profiles/uninstall"
+      description="Uninstalls the collective.odoo.pas add-on."
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      post_handler=".setuphandlers.uninstall"
+      />
+
+  <utility
+      factory=".setuphandlers.HiddenProfiles"
+      name="collective.odoo.pas-hiddenprofiles" />
+
+  <adapter
+        for="Products.CMFCore.interfaces.ISiteRoot"
+        factory=".adapters.OdooPasSettings"
+        provides=".interfaces.IOdooPasSettings"
+      />
+      
+  <subscriber
+      for="Products.CMFCore.interfaces.ISiteRoot
+           zope.traversing.interfaces.IBeforeTraverseEvent"
+      handler=".utils.initConnections"
+      />
+      
+</configure>

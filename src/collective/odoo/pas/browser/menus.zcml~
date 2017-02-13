@@ -1,0 +1,40 @@
+<configure xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="collective.odoo.pas">
+
+  <browser:menu 
+     id="odoo_admin"
+     title="Odoo Administration"
+     />
+
+  <browser:menu
+     id="odoo_settings"
+     title="Settings"
+     />
+
+  <!-- Admin Menus -->
+
+  <!-- Management UI Overview -->
+  <browser:page
+     for="*"
+     name="manage-odoo-overview"
+     class=".admin.Overview"
+     template="templates/admin-overview.pt"
+     permission="cmf.ModifyPortalContent"
+     menu="odoo_admin"
+     title="Odoo Settings"
+     />
+
+  <browser:page
+     for="*"
+     template="templates/odoo-settings-template.pt"
+     name="odoo-settings"
+     class=".admin.OdooSettings"
+     permission="cmf.ModifyPortalContent"
+     menu="odoo_settings"
+     title="General Settings"
+     />
+
+</configure>
