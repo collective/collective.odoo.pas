@@ -64,7 +64,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
 
     security.declarePrivate('getPropertiesForUser')
     def getPropertiesForUser(self, user, request=None):
-        LOG.info(user)
         return {}
 
     security.declarePrivate('createUser')
@@ -94,7 +93,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
             del data['id']
         if data.get('partner_id'):
             data['partner_id'] = data['partner_id'][0]
-        LOG.info(data)
         data['fullname'] = data['name']
         partner = OdooPartner(user_id, name)
         self.ZCacheable_set(data, view_name=view_name, keywords=keywords)
@@ -108,7 +106,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
         password = credentials.get( 'password' )
         if login is None or password is None:
             return None
-        LOG.info('authenticateCredentials: '+str(credentials))
         conn = getUtility(interfaces.IOdooPasUtility)
         try:
             user = conn.login(login, password)
@@ -156,7 +153,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
     # IUserEnumerationPlugin implementation
     def enumerateUsers(self, id=None, login=None, exact_match=False,
             sort_by=None, max_results=None, **kw):
-        LOG.info('enumerateUsers')
         user_info = []
         user_ids = []
         plugin_id = self.getId()
@@ -178,8 +174,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
                          , 'max_results' : max_results
                          }
                        )
-        LOG.info(view_name)
-        LOG.info(keywords)
         cached_info = self.ZCacheable_get( view_name=view_name
                                          , keywords=keywords
                                          , default=None
@@ -187,12 +181,9 @@ class OdooPASPlugin(BasePlugin, Cacheable):
         
         if cached_info is not None:
             return tuple(cached_info)
-        LOG.info('not cached')
         users = []
         conn = getUtility(interfaces.IOdooPasUtility)
-        LOG.info('try login')
         main_user = conn.login()
-        LOG.info(main_user)
         args = []
         if keywords.get('name') and keywords.get('login'):
             if exact_match:
@@ -205,7 +196,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
             else:
                 args = [('login', 'ilike', keywords.get('id', keywords.get('login')))]
         uids = conn.search('res.users', args=args)
-        LOG.info(uids)
         users += conn.browse('res.users', uids)
         out = []
         for user in users:
@@ -216,9 +206,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
                         'email':user.email,
                         'description':user.name,
                         'pluginid' :self.getId()})
-        LOG.info(out)
-        LOG.info(view_name)
-        LOG.info(keywords)
         self.ZCacheable_set(out, view_name=view_name, keywords=keywords)
         return tuple(out)
 
@@ -304,7 +291,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
         """
         uf = self.acl_users
         users = [uf.getUserById(x) for x in self.getUserIds()]
-        LOG.info(users)
         return users
 
     security.declarePublic('allowDeletePrincipal')
