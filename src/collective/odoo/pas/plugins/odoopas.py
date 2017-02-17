@@ -15,6 +15,27 @@ from Products.PlonePAS.interfaces.plugins import IUserIntrospection
 from Products.PluggableAuthService.utils import createViewName
 from Products.PluggableAuthService.plugins.ZODBUserManager import \
     ZODBUserManager as BasePlugin
+from Products.PluggableAuthService.interfaces.plugins import IExtractionPlugin
+from Products.PluggableAuthService.interfaces.plugins import ILoginPasswordHostExtractionPlugin
+from Products.PluggableAuthService.interfaces.plugins import IAuthenticationPlugin
+from Products.PluggableAuthService.interfaces.plugins import IChallengePlugin
+from Products.PluggableAuthService.interfaces.plugins import ICredentialsUpdatePlugin
+from Products.PluggableAuthService.interfaces.plugins import ICredentialsResetPlugin
+from Products.PluggableAuthService.interfaces.plugins import IUserFactoryPlugin
+from Products.PluggableAuthService.interfaces.plugins import IAnonymousUserFactoryPlugin
+from Products.PluggableAuthService.interfaces.plugins import IPropertiesPlugin
+from Products.PluggableAuthService.interfaces.plugins import IGroupsPlugin
+from Products.PluggableAuthService.interfaces.plugins import IRolesPlugin
+from Products.PluggableAuthService.interfaces.plugins import IUpdatePlugin
+from Products.PluggableAuthService.interfaces.plugins import IValidationPlugin
+from Products.PluggableAuthService.interfaces.plugins import IUserEnumerationPlugin
+from Products.PluggableAuthService.interfaces.plugins import IUserAdderPlugin
+from Products.PluggableAuthService.interfaces.plugins import IGroupEnumerationPlugin
+from Products.PluggableAuthService.interfaces.plugins import IRoleEnumerationPlugin
+from Products.PluggableAuthService.interfaces.plugins import IRoleAssignerPlugin
+from Products.PluggableAuthService.interfaces.plugins import INotCompetentPlugin
+from Products.PluggableAuthService.interfaces.plugins import IChallengeProtocolChooser
+from Products.PluggableAuthService.interfaces.plugins import IRequestTypeSniffer
 from Products.PlonePAS.plugins.ufactory import PloneUserFactory, PloneUser
 from OFS.Cache import Cacheable
 import cookielib
@@ -64,6 +85,8 @@ class OdooPASPlugin(BasePlugin, Cacheable):
 
     security.declarePrivate('getPropertiesForUser')
     def getPropertiesForUser(self, user, request=None):
+        LOG.info('getPropertiesForUser')
+        LOG.info(user)
         return {}
 
     security.declarePrivate('createUser')
@@ -102,17 +125,24 @@ class OdooPASPlugin(BasePlugin, Cacheable):
     # IAuthenticationPlugin implementation
     security.declarePrivate( 'authenticateCredentials' )
     def authenticateCredentials(self, credentials):
-        login = credentials.get( 'login' )
-        password = credentials.get( 'password' )
-        if login is None or password is None:
+        if not credentials.get('extractor', None) == 'odoo_pas':
             return None
-        conn = getUtility(interfaces.IOdooPasUtility)
-        try:
-            user = conn.login(login, password)
-            return user.login, user.login
-        except error.RPCError as exc:
-            LOG.info("Odoo Authentication for %s failed: %s",
-                            credentials['login'], exc.message)
+        if credentials.get('login') and credentials.get('password'):
+            conn = getUtility(interfaces.IOdooPasUtility)
+            try:
+                user = conn.auth(credentials.get('login'), credentials.get('password'))
+                if user:
+                    return credentials.get('login'),credentials.get('login')
+            except:
+                return None
+        elif credentials.get(self.cookie_name):
+            cookie_data = credentials.get(self.cookie_name)
+            conn = getUtility(interfaces.IOdooPasUtility)
+            session = conn.getSessionInfo(cookie=cookie_data)
+            if not session:
+                return creds
+            elif session.get('username'):
+                creds.update(session)
         return None
 
     # ICredentialsUpdatePlugin implementation
@@ -121,7 +151,12 @@ class OdooPASPlugin(BasePlugin, Cacheable):
         """Override standard updateCredentials method
         """
         conn = getUtility(interfaces.IOdooPasUtility)
-        cnt = conn.getProxy(request, response)
+        if login and new_password:
+            try:
+                session = conn.proxyAuthenticate(request, response, login, new_password)
+                login = session['username']
+            except:
+                self.resetCredentials(request, response)
 
     # IExtractionPlugin implementation
     security.declarePrivate('extractCredentials')
@@ -135,11 +170,8 @@ class OdooPASPlugin(BasePlugin, Cacheable):
         if login and request.form.has_key('__ac_password'):
             creds['login'] = login
             creds['password'] = request.form.get('__ac_password', '')
-
         elif cookie_data and cookie_data != 'deleted':
-            conn = getUtility(interfaces.IOdooPasUtility)
-            cnt = conn.getProxy(request)
-            # TODO (When do we have to call that?)
+            creds[self.cookie_name] = cookie_data
         if creds:
             creds['remote_host'] = request.get('REMOTE_HOST', '')
 
@@ -147,8 +179,11 @@ class OdooPASPlugin(BasePlugin, Cacheable):
                 creds['remote_address'] = request.getClientAddr()
             except AttributeError:
                 creds['remote_address'] = request.get('REMOTE_ADDR', '')
-
         return creds
+
+    # ICredentialsResetPlugin implementation
+    def resetCredentials(self, request, response):
+        response.expireCookie(self.cookie_name, path='/')
 
     # IUserEnumerationPlugin implementation
     def enumerateUsers(self, id=None, login=None, exact_match=False,
@@ -157,13 +192,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
         user_ids = []
         plugin_id = self.getId()
         view_name = createViewName('enumerateUsers', id or login)
-
-
-        if isinstance( id, basestring ):
-            id = [ id ]
-
-        if isinstance( login, basestring ):
-            login = [ login ]
 
         # Look in the cache first...
         keywords = copy.deepcopy(kw)
@@ -174,6 +202,14 @@ class OdooPASPlugin(BasePlugin, Cacheable):
                          , 'max_results' : max_results
                          }
                        )
+        if not keywords.get('id') or not keywords.get('login'):
+            keywords['id_or_login'] = keywords.get('id') and keywords.get('id') or keywords.get('login')
+            del keywords['id']
+            del keywords['login']
+        try:
+            keywords['id'] = int(keywords.get('id'))
+        except:
+            pass
         cached_info = self.ZCacheable_get( view_name=view_name
                                          , keywords=keywords
                                          , default=None
@@ -183,19 +219,23 @@ class OdooPASPlugin(BasePlugin, Cacheable):
             return tuple(cached_info)
         users = []
         conn = getUtility(interfaces.IOdooPasUtility)
-        main_user = conn.login()
-        args = []
-        if keywords.get('name') and keywords.get('login'):
-            if exact_match:
-                args = ['|', ('name', '=', keywords.get('name')), ('login', '=', keywords.get('login'))]
-            else:
-                args = ['|', ('name', 'ilike', keywords.get('name')), ('login', 'ilike', keywords.get('login'))]
-        elif keywords.get('id', keywords.get('login')):
-            if exact_match:
-                args = [('login', '=', keywords.get('id', keywords.get('login')))]
-            else:
-                args = [('login', 'ilike', keywords.get('id', keywords.get('login')))]
-        uids = conn.search('res.users', args=args)
+        conn.login()
+        if not isinstance(keywords.get('id'), int):
+            login = keywords.get('id_or_login', keywords.get('login'))
+            args = []
+            if keywords.get('name') and login:
+                if exact_match:
+                    args = ['|', ('name', '=', keywords.get('name')), ('login', '=', login)]
+                else:
+                    args = ['|', ('name', 'ilike', keywords.get('name')), ('login', 'ilike', login)]
+            elif login:
+                if exact_match:
+                    args = [('login', '=', login)]
+                else:
+                    args = [('login', 'ilike', login)]
+            uids = conn.search('res.users', args=args)
+        else:
+            uids = [int(keywords.get('id'))]
         users += conn.browse('res.users', uids)
         out = []
         for user in users:
