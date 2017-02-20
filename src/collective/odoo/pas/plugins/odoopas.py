@@ -128,7 +128,9 @@ class OdooPASPlugin(BasePlugin, Cacheable):
         if not credentials.get('extractor', None) == 'odoo_pas':
             return None
         if credentials.get('login') and credentials.get('password'):
-            conn = getUtility(interfaces.IOdooPasUtility)
+            conn = queryUtility(interfaces.IOdooPasUtility, default=None)
+            if conn == None:
+                return None
             try:
                 user = conn.auth(credentials.get('login'), credentials.get('password'))
                 if user:
@@ -150,9 +152,9 @@ class OdooPASPlugin(BasePlugin, Cacheable):
     def updateCredentials(self, request, response, login, new_password):
         """Override standard updateCredentials method
         """
-        conn = getUtility(interfaces.IOdooPasUtility)
         if login and new_password:
             try:
+                conn = getUtility(interfaces.IOdooPasUtility)
                 session = conn.proxyAuthenticate(request, response, login, new_password)
                 login = session['username']
             except:
@@ -218,7 +220,9 @@ class OdooPASPlugin(BasePlugin, Cacheable):
         if cached_info is not None:
             return tuple(cached_info)
         users = []
-        conn = getUtility(interfaces.IOdooPasUtility)
+        conn = queryUtility(interfaces.IOdooPasUtility, default=None)
+        if conn == None:
+            return users
         conn.login()
         if not isinstance(keywords.get('id'), int):
             login = keywords.get('id_or_login', keywords.get('login'))
