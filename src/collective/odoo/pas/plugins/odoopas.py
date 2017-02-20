@@ -139,7 +139,9 @@ class OdooPASPlugin(BasePlugin, Cacheable):
                 return None
         elif credentials.get(self.cookie_name):
             cookie_data = credentials.get(self.cookie_name)
-            conn = getUtility(interfaces.IOdooPasUtility)
+            conn = queryUtility(interfaces.IOdooPasUtility, default=None)
+            if conn == None:
+                return None
             session = conn.getSessionInfo(cookie=cookie_data)
             if not session:
                 return creds
