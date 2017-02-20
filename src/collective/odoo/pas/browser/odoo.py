@@ -20,11 +20,9 @@ from plone.memoize.view import memoize
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone.utils import normalizeString, safe_unicode, utf8_portal, getSiteEncoding
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
-from collective.z3cform.datagridfield.datagridfield import DataGridField, DataGridFieldObject, DataGridFieldObjectSubForm
 from Products.CMFPlone import PloneLocalesMessageFactory as PLMF
 from zope.component.hooks import getSite
 from zope.i18nmessageid import MessageFactory
-from collective.z3cform.datagridfield import DataGridFieldFactory
 from Products.Five.browser import BrowserView
 from plone.autoform.form import AutoExtensibleForm
 
