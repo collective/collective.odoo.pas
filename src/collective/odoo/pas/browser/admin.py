@@ -12,6 +12,7 @@ from plone.autoform.form import AutoExtensibleForm
 from Products.Five.browser import BrowserView
 from collective.odoo.pas import interfaces
 from oerplib import OERP, error
+from zope.event import notify
 LOG = logging.getLogger(__name__)
         
 class Overview(BrowserView):
@@ -45,10 +46,12 @@ class OdooPasSettings(AutoExtensibleForm, form.EditForm):
 
     def update(self):
         super(OdooPasSettings, self).update()
+        site = self.getContent()
         try:
-            config = interfaces.IOdooPasSettings(self.getContent())
+            config = interfaces.IOdooPasSettings(site)
             conn = OERP(server=config.http_host, database=config.dbname, port=config.http_address)
             main_user = conn.login(user=config.username, passwd=config.password)
+            notify(interfaces.OdooPasSettingsModifiedEvent(site))
             self.status = _('Connection done! Your Odoo version is: ${version}. Authentication established.', mapping={'version':conn.version})
         except:
             "Unexpected error:", sys.exc_info()[0]

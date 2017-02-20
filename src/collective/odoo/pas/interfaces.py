@@ -2,7 +2,8 @@
 """Module where all interfaces, events and exceptions live."""
 
 from zope.publisher.interfaces.browser import IDefaultBrowserLayer
-from zope.interface import Interface
+from zope.interface import Interface, implementer
+from zope.component.interfaces import IObjectEvent, ObjectEvent
 from zope import schema
 from . import _
 
@@ -48,3 +49,13 @@ class IOdooPasSettings(Interface):
         title = _(u"Name of your Odoo database"),
         required = True
     )
+
+
+class IOdooPasSettingsModifiedEvent(IObjectEvent):
+    """Event on update registered connection"""
+
+
+@implementer(IOdooPasSettingsModifiedEvent)
+class OdooPasSettingsModifiedEvent(ObjectEvent):
+    """Event on update registered connection"""
+

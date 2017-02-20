@@ -39,5 +39,17 @@
         factory=".adapters.OdooPasSettings"
         provides=".interfaces.IOdooPasSettings"
       />
-
+      
+  <subscriber
+      for="Products.CMFCore.interfaces.ISiteRoot
+           zope.traversing.interfaces.IBeforeTraverseEvent"
+      handler=".utils.initConnections"
+      />
+      
+  <subscriber
+      for="Products.CMFCore.interfaces.ISiteRoot
+           .interfaces.IOdooPasSettingsModifiedEvent"
+      handler=".utils.updateConnections"
+      />
+      
 </configure>

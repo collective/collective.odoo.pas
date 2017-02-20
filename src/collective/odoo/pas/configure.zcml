@@ -46,4 +46,10 @@
       handler=".utils.initConnections"
       />
       
+  <subscriber
+      for="Products.CMFCore.interfaces.ISiteRoot
+           .interfaces.IOdooPasSettingsModifiedEvent"
+      handler=".utils.updateConnections"
+      />
+      
 </configure>

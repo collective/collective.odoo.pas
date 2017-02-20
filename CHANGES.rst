@@ -1,5 +1,10 @@
 Changelog
 =========
+1.0a3 (unreleased)
+------------------
+- Removed wrong imports
+- Update odoo connection utility on setup changes
+
 1.0a2 (unreleased)
 ------------------
 Refactored the whole machinery.

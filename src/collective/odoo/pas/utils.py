@@ -43,8 +43,9 @@ class OdooPasUtility(OERP):
         self.http_host = str(config.http_host)
         self.http_address = str(config.http_address)
         self.dbname = config.dbname
-        super(OdooPasUtility, self).__init__(server=config.http_host, database=config.dbname, protocol='xmlrpc',
-                 port=config.http_address)
+        if self.http_address and self.http_host and self.dbname:
+            super(OdooPasUtility, self).__init__(server=config.http_host, database=config.dbname, protocol='xmlrpc',
+                port=config.http_address)
     
     def login(self, user=None, passwd=None, database=None):
         if not user:
@@ -129,11 +130,15 @@ def registerOdooConnection(site):
     LOG.info('Odoo PAS Utility registered')
     return getUtility(interfaces.IOdooPasUtility)
 
-
 def initConnections(site, event):
     # this is called on first Plone traverse
     portal_quickinstaller = getToolByName(site, 'portal_quickinstaller')
     if portal_quickinstaller.isProductInstalled('collective.odoo.pas'):
         if not getAllUtilitiesRegisteredFor(interfaces.IOdooPasUtility):
-            registerOdooConnection(site)
+            if getattr(interfaces.IOdooPasSettings(site, None), 'dbname'):
+                registerOdooConnection(site)
 
+def updateConnections(site, event):
+    gsm = getGlobalSiteManager()
+    gsm.unregisterUtility(provided=interfaces.IOdooPasUtility)
+    registerOdooConnection(site)
