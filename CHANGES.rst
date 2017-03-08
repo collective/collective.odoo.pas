@@ -1,5 +1,10 @@
 Changelog
 =========
+1.0a4 (unreleased)
+------------------
+- fix missing queryUtility import in odoopas enumerateUsers
+- fix search method from oerplib with Odoo 10 (Oerplib shoud be updated!)
+
 1.0a3 (unreleased)
 ------------------
 - Removed wrong imports

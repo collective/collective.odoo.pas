@@ -41,7 +41,7 @@ from OFS.Cache import Cacheable
 import cookielib
 import urllib, urllib2
 from App.class_init import InitializeClass
-from zope.component import getUtility
+from zope.component import getUtility, queryUtility
 from zope.component.hooks import getSite
 from zope.interface import implements
 from collective.odoo.pas import interfaces
@@ -218,7 +218,6 @@ class OdooPASPlugin(BasePlugin, Cacheable):
                                          , keywords=keywords
                                          , default=None
                                          )
-        
         if cached_info is not None:
             return tuple(cached_info)
         users = []
@@ -239,7 +238,8 @@ class OdooPASPlugin(BasePlugin, Cacheable):
                     args = [('login', '=', login)]
                 else:
                     args = [('login', 'ilike', login)]
-            uids = conn.search('res.users', args=args)
+            LOG.info('searching with args:'+str(args))
+            uids = conn.search('res.users', args=[('active','=',True)])
         else:
             uids = [int(keywords.get('id'))]
         users += conn.browse('res.users', uids)

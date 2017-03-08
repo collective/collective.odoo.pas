@@ -11,6 +11,7 @@ import cookielib
 from urlparse import urlparse
 from oerplib.rpc.jsonrpclib import Proxy
 from oerplib import OERP, error
+from oerplib.tools import v
 from cookielib import Cookie, CookieJar
 import interfaces
 from collective.odoo.pas import _
@@ -121,7 +122,18 @@ class OdooPasUtility(OERP):
 
     def proxyAuthenticate(self, request, response, login, password):
         return self.callProxy('web/session/authenticate', {'db':self.dbname, 'login':login, 'password':password}, request, response)
-            
+
+    # this should be fixed in OERPLib
+    def search(self, model, args=None, offset=0, limit=None, order=None,
+               context=None, count=False):
+        if args is None:
+            args = []
+        context = context or self._context
+        if v(self.version) >= v('10.0'):
+            return self.execute(model, 'search', args, offset, limit, order,
+                                count, context)
+        return super(OdooPasUtility, self).search(model, args, offset, limit, order, context, count)
+
 
 def registerOdooConnection(site):
     processor = OdooPasUtility(site)
@@ -129,6 +141,7 @@ def registerOdooConnection(site):
     gsm.registerUtility(processor, interfaces.IOdooPasUtility)
     LOG.info('Odoo PAS Utility registered')
     return getUtility(interfaces.IOdooPasUtility)
+
 
 def initConnections(site, event):
     # this is called on first Plone traverse
