@@ -3,36 +3,27 @@
   <metal:block use-macro="here/prefs_main_template/macros/master">
     <metal:block fill-slot="prefs_configlet_content">
 
-    <div id="edit-bar">
-    <ul class="contentViews" id="content-views"
-	    tal:define="selected python:request.get('ACTUAL_URL').split('/')[-1]">
-			
-	  <tal:loop tal:repeat="cview context/@@view_get_menu/odoo_admin">
-	    <li class="selected"
-		tal:condition="python:selected == cview['action']">
-              <a href=""
-		 tal:attributes="href cview/action"
-		 tal:content="cview/title" i18n:translate=""> label </a>						
-	    </li>
-	    <li tal:condition="python:selected != cview['action']">
-              <a href=""
-		 tal:attributes="href cview/action"
-		 tal:content="cview/title" i18n:translate=""> label </a>						
-	    </li>
-	  </tal:loop>
-
-	</ul>
-	
-	</div>
 	<metal:content define-macro="content">
     <div id="content" class="documentEditable">
 	<div id="region-content" class="documentContent">
 	  <div metal:use-macro="here/global_statusmessage/macros/portal_message">
 	    Portal status message
 	  </div> 
-	  
+
+      <div class="autotabs">
+        <div class="autotoc-nav"
+	    tal:define="selected python:request.get('ACTUAL_URL').split('/')[-1]">
+	  <tal:loop tal:repeat="cview context/@@view_get_menu/odoo_admin">
+              <a href=""
+		 tal:attributes="href cview/action;
+				 class python:selected == cview['action'] and 'active' or ''"
+		 tal:content="cview/title" i18n:translate=""> label </a>						
+	  </tal:loop>
+	</div>
+      </div>
+
 	  <div class="configlet">
-	    <h1 i18n:domain="collective.Odoo" i18n:translate="heading_odoo_setup">Odoo Setup</h1> 
+	    <h1 i18n:domain="collective.Odoo" i18n:translate="" tal:content="view/title|string:Odoo Setup">Odoo Setup</h1> 
 	    
         <metal:block define-slot="up_to_parent">
             <a i18n:domain="collective.Odoo"

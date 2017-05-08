@@ -14,7 +14,7 @@ long_description = '\n\n'.join([
 
 setup(
     name='collective.odoo.pas',
-    version='1.0a4',
+    version='1.0a5',
     description="An add-on to have a common authentification between Plone and Odoo",
     long_description=long_description,
     # Get more from https://pypi.python.org/pypi?%3Aaction=list_classifiers

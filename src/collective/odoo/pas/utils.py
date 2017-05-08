@@ -1,9 +1,10 @@
-import logging
+import logging, traceback
 from Products.CMFCore.utils import getToolByName
 from zope.component import getAllUtilitiesRegisteredFor, getUtility, getGlobalSiteManager
 from zope.interface import implementer
 from urllib2 import Request, urlopen, URLError
 import urllib, urllib2
+import traceback
 from zope.component.hooks import getSite
 import time
 from urllib import urlencode
@@ -45,8 +46,12 @@ class OdooPasUtility(OERP):
         self.http_address = str(config.http_address)
         self.dbname = config.dbname
         if self.http_address and self.http_host and self.dbname:
-            super(OdooPasUtility, self).__init__(server=config.http_host, database=config.dbname, protocol='xmlrpc',
-                port=config.http_address)
+            try:
+                super(OdooPasUtility, self).__init__(server=config.http_host, database=config.dbname, protocol='xmlrpc',
+                    port=config.http_address)
+            except Exception, e:
+                LOG.error(e, exc_info=True)
+                pass
     
     def login(self, user=None, passwd=None, database=None):
         if not user:

@@ -1,5 +1,11 @@
 Changelog
 =========
+1.0a5 (unreleased)
+------------------
+- fix odoo settings forms
+- uninstalls cleanly (remove pas plugin and site persistent adapter)
+- use RAMCache by default when installing plugin
+
 1.0a4 (unreleased)
 ------------------
 - fix missing queryUtility import in odoopas enumerateUsers

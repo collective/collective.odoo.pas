@@ -6,9 +6,9 @@
 	    <a href=""
 	       class="link-parent"
 	       tal:attributes="href string: $portal_url/@@manage-odoo-overview"
-	       i18n:translate="label_up_to_plone_setup"
-	       i18n:domain="plone">
-              Up to Site Setup
+	       i18n:translate="label_up_to_odoo_setup"
+	       i18n:domain="collective.odoo.pas">
+              Up to Odoo Setup
 	    </a>
   </metal:block>
   <metal:block fill-slot="admin_content">

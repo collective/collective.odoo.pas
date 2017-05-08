@@ -4,6 +4,7 @@ from Products.CMFPlone.interfaces import INonInstallable
 from zope.interface import implementer
 from zope.component import getSiteManager
 from zope.component.hooks import getSite
+from zope.annotation.interfaces import IAnnotations
 from Products.PlonePAS.Extensions.Install import activatePluginInterfaces
 
 LOG = logging.getLogger(__name__)
@@ -25,13 +26,22 @@ def post_install(context):
     
     LOG.debug("\ncollective.odoo.pas Plugin setup")
 
-    plone_pas = uf.manage_addProduct['collective.odoo.pas']
-    LOG.info(plone_pas)
+    odoo_pas = uf.manage_addProduct['collective.odoo.pas']
     found = uf.objectIds(['OdooPAS plugin'])
     if not found:
-        plone_pas.addOdooPASPlugin('odoo_pas', 'OdooPAS plugin')
+        odoo_pas.addOdooPASPlugin('odoo_pas', 'OdooPAS plugin')
     activatePluginInterfaces(site, 'odoo_pas')
+    try:
+        site.acl_users.odoo_pas.ZCacheable_setManagerId('RAMCache')
+    except:
+        LOG.info('unable to set RAMCache as default cache for Odoo PAS')
+        pass
 
 def uninstall(context):
     """Uninstall script"""
-    # Do something at the end of the uninstallation of this package.
+    site = getSite()
+    if IAnnotations(site).get('collective.odoo.pas.adapters.OdooPasSettingsAdapter'):
+        del IAnnotations(site)['collective.odoo.pas.adapters.OdooPasSettingsAdapter']
+    uf = site.acl_users
+    uf.manage_delObjects(['odoo_pas'])
+    plone_pas = uf.manage_addProduct['collective.odoo.pas']
